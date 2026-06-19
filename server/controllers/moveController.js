@@ -1,5 +1,6 @@
 import Move from '../models/Move.js';
 import Pokemon from '../models/Pokemon.js';
+import translationService from '../services/translationService.js';
 
 /**
  * @desc    Get all moves with filtering, sorting, and pagination
@@ -106,7 +107,11 @@ export const getMoveById = async (req, res, next) => {
  */
 export const createMove = async (req, res, next) => {
   try {
-    const move = await Move.create(req.body);
+    const moveData = { ...req.body };
+    if (moveData.effect && !moveData.effectVi) {
+      moveData.effectVi = await translationService.translate(moveData.effect, 'move');
+    }
+    const move = await Move.create(moveData);
 
     res.status(201).json({
       success: true,
@@ -125,7 +130,11 @@ export const createMove = async (req, res, next) => {
  */
 export const updateMove = async (req, res, next) => {
   try {
-    const move = await Move.findByIdAndUpdate(req.params.id, req.body, {
+    const moveData = { ...req.body };
+    if (moveData.effect && !moveData.effectVi) {
+      moveData.effectVi = await translationService.translate(moveData.effect, 'move');
+    }
+    const move = await Move.findByIdAndUpdate(req.params.id, moveData, {
       new: true,
       runValidators: true,
     });

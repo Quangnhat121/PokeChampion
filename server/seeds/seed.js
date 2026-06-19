@@ -6,6 +6,8 @@ import User from '../models/User.js';
 import Move from '../models/Move.js';
 import Pokemon from '../models/Pokemon.js';
 import Team from '../models/Team.js';
+import Translation from '../models/Translation.js';
+import translationService from '../services/translationService.js';
 
 // ---------------------------------------------------------------------------
 // Seed data
@@ -25,6 +27,7 @@ const seedDB = async () => {
       Move.deleteMany({}),
       Pokemon.deleteMany({}),
       Team.deleteMany({}),
+      Translation.deleteMany({}),
     ]);
     console.log('🗑️  Cleared all existing data');
 
@@ -223,7 +226,18 @@ const seedDB = async () => {
       },
     ];
 
-    const moves = await Move.create(movesData);
+    // Translate move effects to Vietnamese during seeding
+    const translatedMovesData = await Promise.all(
+      movesData.map(async (m) => {
+        const effectVi = m.effect ? await translationService.translate(m.effect, 'move') : '';
+        return {
+          ...m,
+          effectVi,
+        };
+      })
+    );
+
+    const moves = await Move.create(translatedMovesData);
     console.log(`⚔️  Created ${moves.length} Dragon-type moves`);
 
     // Build a quick lookup: move name -> move document

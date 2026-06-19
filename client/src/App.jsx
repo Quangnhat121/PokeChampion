@@ -69,12 +69,12 @@ export default function App() {
       <Route path="/type-chart" element={<Layout><TypeChart /></Layout>} />
 
       {/* ─── Pokedex (PokeAPI Realtime) ─── */}
-      <Route path="/pokedex/pokemon" element={<Layout><PokedexPokemonList /></Layout>} />
-      <Route path="/pokedex/pokemon/:nameOrId" element={<Layout><PokedexPokemonDetail /></Layout>} />
-      <Route path="/pokedex/moves" element={<Layout><PokedexMovesList /></Layout>} />
-      <Route path="/pokedex/moves/:nameOrId" element={<Layout><PokedexMoveDetail /></Layout>} />
-      <Route path="/pokedex/types" element={<Layout><PokedexTypeList /></Layout>} />
-      <Route path="/pokedex/types/:nameOrId" element={<Layout><PokedexTypeDetail /></Layout>} />
+      <Route path="/pokedex/pokemon" element={<AdminRoute><Layout><PokedexPokemonList /></Layout></AdminRoute>} />
+      <Route path="/pokedex/pokemon/:nameOrId" element={<AdminRoute><Layout><PokedexPokemonDetail /></Layout></AdminRoute>} />
+      <Route path="/pokedex/moves" element={<AdminRoute><Layout><PokedexMovesList /></Layout></AdminRoute>} />
+      <Route path="/pokedex/moves/:nameOrId" element={<AdminRoute><Layout><PokedexMoveDetail /></Layout></AdminRoute>} />
+      <Route path="/pokedex/types" element={<AdminRoute><Layout><PokedexTypeList /></Layout></AdminRoute>} />
+      <Route path="/pokedex/types/:nameOrId" element={<AdminRoute><Layout><PokedexTypeDetail /></Layout></AdminRoute>} />
 
       {/* Protected */}
       <Route path="/team-builder" element={<ProtectedRoute><Layout><TeamBuilder /></Layout></ProtectedRoute>} />

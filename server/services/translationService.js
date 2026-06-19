@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Translation from '../models/Translation.js';
 
 // ─── Vietnamese Dictionary for Pokémon Game Terms ────────────────────────────
@@ -225,10 +226,44 @@ const RELATION_LABELS = {
 // ─── Translation Engine ─────────────────────────────────────────────────────
 
 /**
- * Translate English text to Vietnamese using dictionary-based approach.
+ * Call public Google Translate API.
+ */
+async function googleTranslate(text) {
+  try {
+    const response = await axios.get(
+      'https://translate.googleapis.com/translate_a/single',
+      {
+        params: {
+          client: 'gtx',
+          sl: 'en',
+          tl: 'vi',
+          dt: 't',
+          q: text,
+        },
+        timeout: 5000,
+      }
+    );
+
+    if (response.data && Array.isArray(response.data[0])) {
+      return response.data[0]
+        .map((x) => x && x[0])
+        .filter(Boolean)
+        .join('')
+        .trim();
+    }
+  } catch (error) {
+    console.error('Google Translate API error:', error.message);
+  }
+  return null;
+}
+
+/**
+ * Translate English text to Vietnamese using Google Translate and a dictionary fallback.
  * 1. Check MongoDB cache
- * 2. Dictionary-based translation
- * 3. Save to MongoDB cache
+ * 2. Check exact dictionary match
+ * 3. Call Google Translate (for phrases/sentences) + post-process with dictionary
+ * 4. Fallback to dictionary-only translation
+ * 5. Save to MongoDB cache
  */
 async function translate(text, category = 'general') {
   if (!text || text.trim() === '') return '';
@@ -246,10 +281,30 @@ async function translate(text, category = 'general') {
     // Continue without cache
   }
 
-  // 2. Translate using dictionary
-  const translated = dictionaryTranslate(cleanText);
+  // 2. Exact match in DICT dictionary (case-insensitive)
+  const dictKey = cleanText.toLowerCase();
+  const exactMatch = Object.keys(DICT).find(
+    (key) => key.toLowerCase() === dictKey
+  );
 
-  // 3. Save to MongoDB cache
+  let translated = '';
+  if (exactMatch) {
+    translated = DICT[exactMatch];
+  } else if (cleanText.includes(' ') || cleanText.length > 10) {
+    // 3. For sentence/phrase level translations, try Google Translate
+    const gTrans = await googleTranslate(cleanText);
+    if (gTrans) {
+      // Post-process with local dictionary overrides to ensure game terms (e.g. Sp. Atk) are translated/capitalized correctly
+      translated = dictionaryTranslate(gTrans);
+    }
+  }
+
+  // 4. Fallback to dictionary translation
+  if (!translated) {
+    translated = dictionaryTranslate(cleanText);
+  }
+
+  // 5. Save to MongoDB cache
   try {
     await Translation.findOneAndUpdate(
       { originalText: cleanText, category },

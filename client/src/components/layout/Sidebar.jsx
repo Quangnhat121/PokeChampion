@@ -99,43 +99,45 @@ export default function Sidebar({ isOpen, onClose }) {
             </NavLink>
           ))}
 
-          {/* PokeAPI Section */}
-          <div className="pt-3">
-            <button
-              onClick={() => setPokedexOpen((o) => !o)}
-              className="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-widest hover:text-gray-300 transition-colors"
-            >
-              <Globe size={12} />
-              <span>PokeAPI · Realtime</span>
-              {pokedexOpen ? <ChevronUp size={12} className="ml-auto" /> : <ChevronDown size={12} className="ml-auto" />}
-            </button>
+          {/* PokeAPI Section - Admin only */}
+          {isAdmin && (
+            <div className="pt-3">
+              <button
+                onClick={() => setPokedexOpen((o) => !o)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-widest hover:text-gray-300 transition-colors"
+              >
+                <Globe size={12} />
+                <span>PokeAPI · Realtime</span>
+                {pokedexOpen ? <ChevronUp size={12} className="ml-auto" /> : <ChevronDown size={12} className="ml-auto" />}
+              </button>
 
-            {pokedexOpen && (
-              <div className="space-y-0.5 mt-1">
-                {pokedexItems.map(({ path, label }) => (
-                  <NavLink
-                    key={path}
-                    to={path}
-                    onClick={onClose}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 pl-8 pr-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500'
-                          : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: isActive ? '#34d399' : '#4b5563' }} />
-                        <span>{label}</span>
-                      </>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
+              {pokedexOpen && (
+                <div className="space-y-0.5 mt-1">
+                  {pokedexItems.map(({ path, label }) => (
+                    <NavLink
+                      key={path}
+                      to={path}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 pl-8 pr-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          isActive
+                            ? 'bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500'
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: isActive ? '#34d399' : '#4b5563' }} />
+                          <span>{label}</span>
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Admin nav */}
           {isAdmin && (

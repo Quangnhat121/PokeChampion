@@ -36,6 +36,19 @@ const moveSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'PP is required'],
   },
+  range: {
+    type: String,
+    enum: [
+      'Đơn mục tiêu',
+      'Tất cả mục tiêu',
+      'Bản thân',
+      'Toàn bộ sân đấu',
+      'Tất cả đồng minh',
+      'Một đồng minh',
+      'Tất cả Pokémon xung quanh',
+    ],
+    default: 'Đơn mục tiêu',
+  },
   effect: {
     type: String,
   },

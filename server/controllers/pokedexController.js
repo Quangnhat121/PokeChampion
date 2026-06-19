@@ -124,13 +124,12 @@ export const getPokemonDetail = async (req, res, next) => {
     try {
       const species = await pokeApiService.getPokemonSpecies(pokemon.name);
 
-      // Get English flavor text, then translate
+      // Get English flavor text
       const enFlavor = species.flavor_text_entries?.find(
         (e) => e.language?.name === 'en'
       );
       if (enFlavor) {
-        const cleanText = enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim();
-        flavorText = await translationService.translate(cleanText, 'flavor');
+        flavorText = enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim();
       }
 
       // Genus
@@ -140,7 +139,7 @@ export const getPokemonDetail = async (req, res, next) => {
       // Species data not critical
     }
 
-    // Translate ability descriptions
+    // Get ability descriptions (English only)
     const abilities = await Promise.all(
       pokemon.abilities.map(async (a) => {
         let description = '';
@@ -150,10 +149,7 @@ export const getPokemonDetail = async (req, res, next) => {
             (e) => e.language?.name === 'en'
           );
           if (enEffect) {
-            description = await translationService.translate(
-              enEffect.short_effect || enEffect.effect,
-              'ability'
-            );
+            description = enEffect.short_effect || enEffect.effect;
           }
         } catch {
           // Continue
@@ -322,27 +318,21 @@ export const getMoveDetail = async (req, res, next) => {
     const { nameOrId } = req.params;
     const move = await pokeApiService.getMoveDetail(nameOrId);
 
-    // Translate effect to Vietnamese
-    let effectVi = '';
     const enEffect = move.effect_entries?.find(
       (e) => e.language?.name === 'en'
     );
-    if (enEffect) {
-      const effectText = (enEffect.short_effect || enEffect.effect)
-        .replace(/\$effect_chance%/g, `${move.effect_chance || '??'}%`)
-        .trim();
-      effectVi = await translationService.translate(effectText, 'move');
-    }
+    const effectText = enEffect
+      ? (enEffect.short_effect || enEffect.effect)
+          .replace(/\$effect_chance%/g, `${move.effect_chance || '??'}%`)
+          .trim()
+      : '';
 
-    // Flavor text
-    let flavorVi = '';
     const enFlavor = move.flavor_text_entries?.find(
       (e) => e.language?.name === 'en'
     );
-    if (enFlavor) {
-      const flavorText = enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim();
-      flavorVi = await translationService.translate(flavorText, 'flavor');
-    }
+    const flavorText = enFlavor
+      ? enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim()
+      : '';
 
     // Pokemon that learn this move (from PokeAPI, limit 20)
     const pokemonLearned = move.learned_by_pokemon?.slice(0, 20).map((p) => {
@@ -367,10 +357,10 @@ export const getMoveDetail = async (req, res, next) => {
         pp: move.pp,
         priority: move.priority,
         effectChance: move.effect_chance,
-        effect: enEffect?.short_effect || '',
-        effectVi,
-        flavorText: enFlavor?.flavor_text?.replace(/\n|\f/g, ' ').trim() || '',
-        flavorVi,
+        effect: effectText,
+        effectVi: '',
+        flavorText: flavorText,
+        flavorVi: '',
         pokemonLearned,
       },
     });
@@ -400,7 +390,7 @@ export const getTypeList = async (req, res, next) => {
       .filter((t) => !['unknown', 'shadow', 'stellar'].includes(t.name))
       .map((t) => ({
         name: t.name,
-        nameVi: translationService.translateTypeName(t.name),
+        nameVi: t.name,
       }));
 
     res.json({
@@ -413,8 +403,8 @@ export const getTypeList = async (req, res, next) => {
 };
 
 /**
- * GET /api/pokedex/types/:nameOrId
- * Type detail with damage relations in Vietnamese.
+ * @desc    GET /api/pokedex/types/:nameOrId
+ * @route   Type detail with damage relations in English.
  */
 export const getTypeDetail = async (req, res, next) => {
   try {
@@ -426,10 +416,10 @@ export const getTypeDetail = async (req, res, next) => {
 
     for (const [key, types] of Object.entries(dr)) {
       damageRelations[key] = {
-        label: translationService.translateDamageRelation(key),
+        label: key,
         types: types.map((t) => ({
           name: t.name,
-          nameVi: translationService.translateTypeName(t.name),
+          nameVi: t.name,
         })),
       };
     }
@@ -482,27 +472,15 @@ export const getAbilityDetail = async (req, res, next) => {
     const { nameOrId } = req.params;
     const ability = await pokeApiService.getAbilityDetail(nameOrId);
 
-    // Translate description
-    let descriptionVi = '';
     const enEffect = ability.effect_entries?.find(
       (e) => e.language?.name === 'en'
     );
-    if (enEffect) {
-      descriptionVi = await translationService.translate(
-        enEffect.short_effect || enEffect.effect,
-        'ability'
-      );
-    }
+    const descriptionText = enEffect ? (enEffect.short_effect || enEffect.effect) : '';
 
-    // Flavor text
-    let flavorVi = '';
     const enFlavor = ability.flavor_text_entries?.find(
       (e) => e.language?.name === 'en'
     );
-    if (enFlavor) {
-      const flavorText = enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim();
-      flavorVi = await translationService.translate(flavorText, 'flavor');
-    }
+    const flavorText = enFlavor ? enFlavor.flavor_text.replace(/\n|\f/g, ' ').trim() : '';
 
     // Pokemon with this ability
     const pokemon = ability.pokemon?.slice(0, 20).map((p) => {
@@ -520,10 +498,10 @@ export const getAbilityDetail = async (req, res, next) => {
       data: {
         id: ability.id,
         name: ability.name,
-        description: enEffect?.short_effect || '',
-        descriptionVi,
-        flavorText: enFlavor?.flavor_text?.replace(/\n|\f/g, ' ').trim() || '',
-        flavorVi,
+        description: descriptionText,
+        descriptionVi: '',
+        flavorText: flavorText,
+        flavorVi: '',
         pokemon,
       },
     });

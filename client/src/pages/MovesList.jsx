@@ -143,6 +143,7 @@ export default function MovesList() {
                 <SortHeader field="power">Power</SortHeader>
                 <SortHeader field="accuracy">Accuracy</SortHeader>
                 <SortHeader field="pp">PP</SortHeader>
+                <th className="p-4">Range</th>
                 <th className="p-4 hidden lg:table-cell">Effect</th>
                 {user?.role === 'admin' && <th className="p-4 w-20"></th>}
               </tr>
@@ -168,6 +169,7 @@ export default function MovesList() {
                   <td className="p-4 text-white font-medium">{m.power || '—'}</td>
                   <td className="p-4 text-gray-300">{m.accuracy || '—'}</td>
                   <td className="p-4 text-gray-300">{m.pp}</td>
+                  <td className="p-4 text-gray-300 whitespace-nowrap text-xs">{m.range || 'Đơn mục tiêu'}</td>
                   <td className="p-4 text-gray-400 text-xs max-w-[200px] truncate hidden lg:table-cell">{m.effect || '—'}</td>
                   {user?.role === 'admin' && (
                     <td className="p-4">
@@ -213,7 +215,8 @@ export default function MovesList() {
                   <div className="text-white font-bold">{m.pp}</div>
                 </div>
               </div>
-              {m.effect && <p className="text-xs text-gray-400 mt-3 line-clamp-2">{m.effect}</p>}
+              <div className="mt-2 text-xs text-indigo-400 font-medium">Range: {m.range || 'Đơn mục tiêu'}</div>
+              {m.effect && <p className="text-xs text-gray-400 mt-2 line-clamp-2">{m.effect}</p>}
             </Link>
           ))}
         </div>

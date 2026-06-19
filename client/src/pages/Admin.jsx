@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Shield, Zap, Swords, Plus, Pencil, Trash2, Save, X } from 'lucide-react'
+import { Shield, Zap, Swords, Plus, Pencil, Trash2, Save, X, Search } from 'lucide-react'
 import api from '../services/api'
 import { TYPE_LIST, CATEGORY_LIST, ROLE_LIST } from '../utils/typeData'
 import TypeBadge from '../components/ui/TypeBadge'
@@ -35,6 +35,15 @@ const moveSchema = z.object({
   power: z.coerce.number().min(0).default(0),
   accuracy: z.coerce.number().min(0).max(100).default(100),
   pp: z.coerce.number().min(1, 'PP is required'),
+  range: z.enum([
+    'Đơn mục tiêu',
+    'Tất cả mục tiêu',
+    'Bản thân',
+    'Toàn bộ sân đấu',
+    'Tất cả đồng minh',
+    'Một đồng minh',
+    'Tất cả Pokémon xung quanh',
+  ]).default('Đơn mục tiêu'),
   effect: z.string().optional(),
   strategyNote: z.string().optional(),
 })
@@ -56,6 +65,39 @@ function PokemonForm({ editData, onSaved, allMoves }) {
     editData?.moves?.map((m) => typeof m === 'object' ? m._id : m) || []
   )
   const [saving, setSaving] = useState(false)
+  const [fetchName, setFetchName] = useState('')
+  const [isFetching, setIsFetching] = useState(false)
+
+  const handleFetchPokeApi = async () => {
+    if (!fetchName.trim()) return
+    setIsFetching(true)
+    try {
+      const res = await api.get(`/pokedex/pokemon/${fetchName.trim().toLowerCase()}`)
+      const p = res.data.data
+      
+      const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
+      
+      reset({
+        name: capitalize(p.name),
+        imageUrl: p.image || p.sprite || '',
+        primaryType: p.types[0] || '',
+        secondaryType: p.types[1] || '',
+        ability: p.abilities[0]?.name ? capitalize(p.abilities[0].name) : '',
+        hp: p.stats.hp,
+        attack: p.stats.attack,
+        defense: p.stats.defense,
+        spAtk: p.stats.spAtk,
+        spDef: p.stats.spDef,
+        speed: p.stats.speed,
+        strategyNote: p.flavorText || '',
+      })
+      toast.success('Fetched from PokeAPI!')
+    } catch (err) {
+      toast.error('Pokemon not found in PokeAPI')
+    } finally {
+      setIsFetching(false)
+    }
+  }
 
   const toggleMove = (id) => {
     setSelectedMoves((prev) =>
@@ -100,6 +142,32 @@ function PokemonForm({ editData, onSaved, allMoves }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Fetch from PokeAPI */}
+      <div className="flex gap-2 mb-4 bg-[#1a1a2e] p-3 rounded-xl border border-indigo-500/30">
+        <input 
+          type="text" 
+          placeholder="Enter Pokemon name or ID..." 
+          className="input-field flex-1"
+          value={fetchName}
+          onChange={(e) => setFetchName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleFetchPokeApi();
+            }
+          }}
+        />
+        <button 
+          type="button" 
+          onClick={handleFetchPokeApi} 
+          disabled={isFetching}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
+        >
+          {isFetching ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+          Fetch PokeAPI
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-gray-400 mb-1 block">Name *</label>
@@ -198,7 +266,7 @@ function PokemonForm({ editData, onSaved, allMoves }) {
 function MoveForm({ editData, onSaved, allPokemon }) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(moveSchema),
-    defaultValues: editData || {},
+    defaultValues: editData || { range: 'Đơn mục tiêu' },
   })
   const [selectedPokemon, setSelectedPokemon] = useState(
     editData?.pokemonLearned?.map((p) => typeof p === 'object' ? p._id : p) || []
@@ -255,6 +323,19 @@ function MoveForm({ editData, onSaved, allPokemon }) {
             {CATEGORY_LIST.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category.message}</p>}
+        </div>
+        <div>
+          <label className="text-sm text-gray-400 mb-1 block">Range *</label>
+          <select {...register('range')} className="input-field">
+            <option value="Đơn mục tiêu">Đơn mục tiêu</option>
+            <option value="Tất cả mục tiêu">Tất cả mục tiêu</option>
+            <option value="Bản thân">Bản thân</option>
+            <option value="Toàn bộ sân đấu">Toàn bộ sân đấu</option>
+            <option value="Tất cả đồng minh">Tất cả đồng minh</option>
+            <option value="Một đồng minh">Một đồng minh</option>
+            <option value="Tất cả Pokémon xung quanh">Tất cả Pokémon xung quanh</option>
+          </select>
+          {errors.range && <p className="text-red-400 text-xs mt-1">{errors.range.message}</p>}
         </div>
         <div>
           <label className="text-sm text-gray-400 mb-1 block">Power</label>
@@ -461,7 +542,7 @@ export default function Admin() {
                 <div className="flex items-center gap-3">
                   <TypeBadge type={m.type} />
                   <span className="text-white font-medium text-sm">{m.name}</span>
-                  <span className="text-xs text-gray-500">{m.category} • PWR:{m.power || '—'}</span>
+                  <span className="text-xs text-gray-500">{m.category} • PWR:{m.power || '—'} • Range: {m.range || 'Đơn mục tiêu'}</span>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => setSearchParams({ tab: 'moves', edit: m._id })} className="p-1.5 rounded-lg hover:bg-indigo-600/30 text-gray-400 hover:text-indigo-400">

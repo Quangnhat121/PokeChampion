@@ -66,7 +66,7 @@ export default function MoveDetail() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card p-6 text-center">
           <Flame className="w-6 h-6 text-orange-400 mx-auto mb-2" />
           <div className="text-sm text-gray-400 mb-1">Power</div>
@@ -81,6 +81,11 @@ export default function MoveDetail() {
           <Target className="w-6 h-6 text-blue-400 mx-auto mb-2" />
           <div className="text-sm text-gray-400 mb-1">PP</div>
           <div className="text-3xl font-bold text-white">{move.pp}</div>
+        </div>
+        <div className="glass-card p-6 text-center">
+          <Crosshair className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+          <div className="text-sm text-gray-400 mb-1">Range</div>
+          <div className="text-xl font-bold text-white mt-1">{move.range || 'Đơn mục tiêu'}</div>
         </div>
       </div>
 
