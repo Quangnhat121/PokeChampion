@@ -26,6 +26,11 @@ import Move from './models/Move.js';
 // ---------------------------------------------------------------------------
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((origin) => origin.trim()) : []),
+].filter(Boolean);
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
@@ -39,7 +44,13 @@ app.use(cookieParser());
 // CORS — allow the front-end origin with credentials (cookies)
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   })
 );

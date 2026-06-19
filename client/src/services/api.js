@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/authStore'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://pokechampion-production.up.railway.app/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
